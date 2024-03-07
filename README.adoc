@@ -1,65 +1,12 @@
 
-= getting-started
+= EAP Devfile Examples
 
-The `getting-started` project is a simple Jakarta EE application with a HTTP endpoint that is running in 
-https://access.redhat.com/products/red-hat-jboss-enterprise-application-platform/[Red Hat JBoss Enterprise Application Platform].
-
-The `src/main` folder contains a simple 'Hello world' style Jakarta EE application using JAX-RS.
-
-== Building the application
-
-To run the application, you use Maven:
-
-[source,shell]
-----
-mvn clean package
-----
-
-Maven will compile the application, provision a WildFly server
-The WildFly server is created in `target/server` with the application deployed in it.
-
-== Running the application
-
-To run the application, run the commands:
-
-[source,shell]
-----
-cd target/server
-./bin/standalone.sh
-----
-
-Once WildFly is running, the application can be accessed at http://localhost:8080/
-
-== Testing the application
-
-To run integration tests to verify the application, you use Maven:
-
-[source,shell]
-----
-mvn clean package verify
-----
-
-Tests in `src/test` are run against the server in `target/server`.
-
-== Deploying on OpenShift SandBox
-
-Because of the limiations of the sandbox you can create a namespace to deploy on 
-
-
-== Deploying on Kubernetes
-
-We need to create a secret to hold the credentials to be able to upload to the image registry:
-
-[source,shell]
-----
-kubectl delete secret quay-secret --namespace $user_namespace
-kubectl create secret generic quay-secret --namespace $user_namespace --from-literal=IMAGE_REGISTRY_PASSWORD=******** --from-literal=IMAGE_REGISTRY_LOGIN=ehugonne@redhat.com --from-literal=IMAGE_REGISTRY_NAMESPACE=ehugonne
-kubectl label secret quay-secret --namespace $user_namespace controller.devfile.io/mount-to-devworkspace=true controller.devfile.io/watch-secret=true
-kubectl annotate secret quay-secret --namespace $user_namespace controller.devfile.io/mount-as='env'
-----
+This repository contains samples of https://devfile.io/[devfiles] describing how to develop on
+https://access.redhat.com/products/red-hat-jboss-enterprise-application-platform/[Red Hat JBoss Enterprise Application Platform] for https://devfile.io/docs/2.2.0/innerloop-vs-outerloop[innerloop and outerloop].
 
 
 == Resources
 
 * https://access.redhat.com/products/red-hat-jboss-enterprise-application-platform/[Red Hat JBoss Enterprise Application Platform]
 * https://access.redhat.com/documentation/en-us/red_hat_jboss_enterprise_application_platform/8.0[Red Hat JBoss Enterprise Application Platform Documentation]
+* https://devfile.io/[Devfile: an open standard defining containerized development environments]
