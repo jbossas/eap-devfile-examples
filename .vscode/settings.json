@@ -1,0 +1,5 @@
+{
+    "java.server.launchMode": "Standard",
+    "editor.codeActionsOnSave": {
+    }
+}
