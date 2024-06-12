@@ -1,0 +1,12 @@
+build:
+  uri: https://github.com/jbossas/eap-devfile-examples.git
+  ref: eap-8.0.x
+  mode: s2i
+  s2i:
+    buildApplicationImage: true
+    kind: DockerImage
+    jdk: "17"
+deploy:
+  replicas: 1
+  route:
+    enabled: true
