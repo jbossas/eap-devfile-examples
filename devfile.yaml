@@ -1,0 +1,123 @@
+schemaVersion: 2.2.0
+metadata:
+  name: java-jboss-eap-bootable-xp
+  version: 1.0.0
+  displayName: JBoss EAP XP 5.0 Bootable Jar
+  description: Java stack with EAP XP 5.0 Bootable Jar, OpenJDK 17 and Maven 3.9
+  tags: ["RHEL8", "Java", "OpenJDK", "Maven", "EAP", "Microprofile", "EAP XP"]
+  icon: https://raw.githubusercontent.com/redhat-developer/devfile-registry/main/icons/type-jboss.svg
+  projectType: "JBoss EAP XP"
+  language: "java"
+  website: https://access.redhat.com/products/red-hat-jboss-enterprise-application-platform/
+variables:
+  imageRegistry: 'image-registry.openshift-image-registry.svc:5000'
+  imageName: 'microprofile-config'
+  imageVersion: 'latest'
+  applicationName: 'start'
+  nodeName: 'microprofile-config'
+  target-namespace: 'microprofile-config'
+components:
+  - name: tools
+    container:
+      image:  registry.redhat.io/devspaces/udi-rhel9:3.20
+      memoryLimit: 1512Mi
+      mountSources: true
+      volumeMounts:
+        - name: m2
+          path: /home/user/.m2
+      env:
+        - name: JAVA_OPTS
+          value: '-Djava.security.egd=file:/dev/urandom -Djboss.host.name=localhost'
+        - name: DEBUG_PORT
+          value: '5005'
+        - name: NODE_NAME
+          value: '{{nodeName}}'
+        - name: IMAGE_REGISTRY
+          value: '{{imageRegistry}}'
+        - name: IMAGE
+          value: '{{imageName}}'
+        # - name: TARGET_NAMESPACE
+        #   value: '{{target-namespace}}'
+        - name: VSCODE_DEFAULT_WORKSPACE
+          value: /projects/wildfly-devfile-examples/.code-workspace
+        - name: USE_JAVA17
+          value: 'true'
+      endpoints:
+        - name: debug
+          exposure: internal
+          protocol: tcp
+          targetPort: 5005
+        - name: 'http'
+          protocol: http
+          targetPort: 8080
+          exposure: public
+        - name: 'management'
+          targetPort: 9990
+          protocol: http
+          exposure: internal
+        - name: 'transactions'
+          targetPort: 4172
+          protocol: tcp
+          exposure: internal
+  - name: image-build
+    image:
+      dockerfile:
+        buildContext: .
+        rootRequired: false
+        uri: Containerfile
+      imageName: '{{imageName}}:{{imageVersion}}'
+  - name: kubernetes-deploy
+    kubernetes:
+      endpoints:
+        - name: http-8081
+          path: /
+          targetPort: 8081
+      uri: deploy.yaml
+    attributes:
+        deployment/container-port: 8081
+        deployment/cpuLimit: 100m
+        deployment/cpuRequest: 10m
+        deployment/memoryLimit: 300Mi
+        deployment/memoryRequest: 180Mi
+        deployment/replicas: 1
+  - name: m2
+    volume:
+      size: 3Gi
+commands:
+  - id: package
+    exec:
+      label: "InnerLoop 01 - Build the application."
+      component: tools
+      commandLine: mvn package -Ddev
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: build
+        isDefault: true
+  - id: run
+    exec:
+      label: "InnerLoop 02 - Run the server in dev mode."
+      component: tools
+      commandLine: mvn wildfly-jar:dev -Dwildfly.bootable.arguments="-Djboss.node.name=localhost" && tail -f /projects/eap-devfile-examples/target/wildfly-jar-dev-stdout.log
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: run
+        isDefault: true
+  - id: debug
+    exec:
+      label: "InnerLoop 03 - Debug the server in dev mode."
+      component: tools
+      commandLine: mvn -Dwildfly.bootable.arguments="-Djboss.node.name=localhost" -Dwildfly.bootable.jvmArguments="-agentlib:jdwp=transport=dt_socket,address=0.0.0.0:${DEBUG_PORT},server=y,suspend=n" wildfly-jar:dev && tail -f /projects/eap-devfile-examples/target/wildfly-jar-dev-stdout.log
+      workingDir: ${PROJECT_SOURCE}
+      group:
+        kind: debug
+        isDefault: true
+  - id: shutdown
+    exec:
+      label: "InnerLoop 04 - Shutdown the server."
+      component: tools
+      commandLine: mvn wildfly-jar:shutdown && pkill -f tail
+      workingDir: ${PROJECT_SOURCE}
+      hotReloadCapable: false
+      group:
+        kind: run
+        isDefault: false
