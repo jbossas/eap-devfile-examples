@@ -1,65 +1,48 @@
+= EAP Devfile Examples
 
-= getting-started
+This repository contains samples of https://devfile.io/[devfiles] describing how to develop on
+https://access.redhat.com/products/red-hat-jboss-enterprise-application-platform/[Red Hat JBoss Enterprise Application Platform] for https://devfile.io/docs/2.2.0/innerloop-vs-outerloop[innerloop and outerloop].
+
+== getting-started
 
 The `getting-started` project is a simple Jakarta EE application with a HTTP endpoint that is running in 
 https://access.redhat.com/products/red-hat-jboss-enterprise-application-platform/[Red Hat JBoss Enterprise Application Platform].
 
 The `src/main` folder contains a simple 'Hello world' style Jakarta EE application using JAX-RS.
 
-== Building the application
+== Creating the workspace
 
-To run the application, you use Maven:
+You can create the workspace from the git repository directly. 
+you can either select https://github.com/jbossas/eap-devfile-examples/tree/eap-8.0.x[https://github.com/jbossas/eap-devfile-examples/tree/eap-8.0.x] or your own fork.
 
-[source,shell]
-----
-mvn clean package
-----
+== Building and running the application
 
-Maven will compile the application, provision a WildFly server
-The WildFly server is created in `target/server` with the application deployed in it.
+We provide through the TaskManager extension an easy way to access the *Tasks * defined in the devfile but you can also use the `Run Task` in the prompt and select the one you want.
+Please note that the current devfile is defined to be used on the https://developers.redhat.com/developer-sandbox/ide[Red Hat Developer Sandbox IDE] so some tasks are commented out.
+Those commented out tasks allow you to deploy your application on another namespace that is deined with the `target-namespace` variable and the `TARGET_NAMESPACE` environment variable.
 
-== Running the application
+To build the application, run the command: *InnerLoop 01 - Build the application*. Once that is done you can run the application using: *InnerLoop 02 - Run the application in dev mode*.
+You then should be able to access your application.
+If you want to debug your application you need first to stop it using *InnerLoop 04 - Shutdown the server* and then restart it in debug mode using *InnerLoop 03 - Debug the application in dev mode*.
+You should be able to attach the debugger to it and debug your application.
 
-To run the application, run the commands:
+Once you are satisfied with your developments you can deploy your application on OpenShift.
 
-[source,shell]
-----
-cd target/server
-./bin/standalone.sh
-----
+== Deploying on Openshift
 
-Once WildFly is running, the application can be accessed at http://localhost:8080/
-
-== Testing the application
-
-To run integration tests to verify the application, you use Maven:
+To deploy on OpenShift we will rely on https://jbossas.github.io/eap-charts/[Red Hat JBoss Enterprise Application Platform Helm Charts] wwhich are configured in the `.charts` folder.
+To deploy you can simply execute the task *OuterLoop 01 - Deploy Image into OpenShift* which takes care of installing the helm charts and deploying your application that will be built and deployed on OpenShift with s2i.
+Once it is deployed you can access its URL using:
 
 [source,shell]
 ----
-mvn clean package verify
+oc get route getting-started
 ----
 
-Tests in `src/test` are run against the server in `target/server`.
-
-== Deploying on OpenShift SandBox
-
-Because of the limiations of the sandbox you can create a namespace to deploy on 
-
-
-== Deploying on Kubernetes
-
-We need to create a secret to hold the credentials to be able to upload to the image registry:
-
-[source,shell]
-----
-kubectl delete secret quay-secret --namespace $user_namespace
-kubectl create secret generic quay-secret --namespace $user_namespace --from-literal=IMAGE_REGISTRY_PASSWORD=******** --from-literal=IMAGE_REGISTRY_LOGIN=ehugonne@redhat.com --from-literal=IMAGE_REGISTRY_NAMESPACE=ehugonne
-kubectl label secret quay-secret --namespace $user_namespace controller.devfile.io/mount-to-devworkspace=true controller.devfile.io/watch-secret=true
-kubectl annotate secret quay-secret --namespace $user_namespace controller.devfile.io/mount-as='env'
-----
-
+If you want to undeploy you can use the task *OuterLoop 02 - Undeploy Image from OpenShift*.
 
 == Resources
 
 * https://access.redhat.com/products/red-hat-jboss-enterprise-application-platform/[Red Hat JBoss Enterprise Application Platform]
 * https://access.redhat.com/documentation/en-us/red_hat_jboss_enterprise_application_platform/8.0[Red Hat JBoss Enterprise Application Platform Documentation]
+* https://devfile.io/[Devfile: an open standard defining containerized development environments]
